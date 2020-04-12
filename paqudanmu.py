@@ -6,8 +6,19 @@ Created on Sat Mar 21 11:41:41 2020
 """
 import time
 import requests
+import json
+import pymysql
 Roomid=input()#764155房间号
 url ='https://api.live.bilibili.com/xlive/web-room/v1/dM/gethistory'
+
+#请求头
+headers={
+    'Content-Type':'application/x-www-form-urlencoded',
+    'Origin': 'https://live.bilibili.com',
+    'Referer':'https://live.bilibili.com/5225369?spm_id_from=333.334.b_62696c695f6c697665.5',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36',
+}
+#请求体
 dat={'roomid'	:Roomid,
 'csrf_token':'6889415833245876182d74a0f361b641',
 'csrf'	:'6889415833245876182d74a0f361b641',
@@ -82,5 +93,69 @@ def User_Name_Color():#牌子
       uname_color=list(map(lambda ii: html.json()['data']['room'][ii]['uname_color'],range(10)))
       time.sleep(5)
       return uname_color
-   
-  
+
+########
+def create():
+    
+    #打开数据库连接
+    db = pymysql.connect(host = 'BiliBiliDanMu',user = 'root',passwd = '721017988',connect_timeout=10)
+    # 使用cursor()方法获取操作游标
+    cursor = db.cursor()
+    
+    # 如果数据表已经存在使用 execute() 方法删除表。
+    cursor.execute("DROP TABLE IF EXISTS ROOMID")#########暂时只存一个房间的弹幕
+
+    # 创建数据表SQL语句
+    sql = """CREATE TABLE ROOMID ( 
+            UID INT PRIMARY KEY AUTO_INCREMENT,
+            NICKNAME  CHAR(32),
+            TEXT  CHAR(512),
+            TIMELINE  CHAR(32)，
+            VIP  TINYINT(1),
+            SVIP  TINYINT(1),
+            ISADMIN  TINYINT(1),
+            GUARDLEVEL  INT，
+            MEDAL  JSON
+             )"""
+ 
+    cursor.execute(sql)
+
+    # 关闭数据库连接
+    db.close()
+ 
+def insert(value):
+
+    # 打开数据库连接
+    db = pymysql.connect("localhost", "root", "root", "TESTDB")
+
+    # 使用cursor()方法获取操作游标
+    cursor = db.cursor()
+
+    # SQL 插入语句
+    sql = """INSERT INTO ROOMID(Roomid  INT AUTO_INCREMENT PRIMARY KEY,UID ,NICKNAME,TEXT,
+                                TIMELINE,VIP,SVIP,
+                                ISADMIN,GUARDLEVEL,MEDAL)
+                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s )"""
+    try:
+        cursor.execute(sql,value)
+        db.commit()
+        print('插入数据成功')
+    except:
+        db.rollback()
+        print("插入数据失败")
+    db.close()
+
+
+#实时请求数据
+    creat()
+    
+while True:
+    time.sleep(2)
+    response=requests.post(url=url,headers=headers,data=dat)
+    dic_data=response.json()
+    # print(type(dic_data))
+    content=[item for item in dic_data['data']['room']]
+    for item in content:
+        medal = json.dumps(item['medal'])
+        value=[Roomid,item['uid'],item['nickname'],item['text'],item['timeline'],item['vip'],item['svip'],item['isadmin'],item['guard_level'],medal]
+        insert(value)
