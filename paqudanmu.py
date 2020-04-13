@@ -98,46 +98,55 @@ def User_Name_Color():#牌子
 def create():
     
     #打开数据库连接
-    db = pymysql.connect(host = 'BiliBiliDanMu',user = 'root',passwd = '721017988',connect_timeout=10)
+    db = pymysql.connect(host='localhost',port=3306,user='root',passwd='721017988',database='BiliBiliDanMu',charset='utf8',connect_timeout=10)
+    
     # 使用cursor()方法获取操作游标
     cursor = db.cursor()
     
     # 如果数据表已经存在使用 execute() 方法删除表。
-    cursor.execute("DROP TABLE IF EXISTS ROOMID")#########暂时只存一个房间的弹幕
+    cursor.execute("DROP TABLE IF EXISTS ROOMID")
 
     # 创建数据表SQL语句
-    sql = """CREATE TABLE ROOMID ( 
-            UID INT PRIMARY KEY AUTO_INCREMENT,
-            NICKNAME  CHAR(32),
-            TEXT  CHAR(512),
-            TIMELINE  CHAR(32)，
-            VIP  TINYINT(1),
-            SVIP  TINYINT(1),
-            ISADMIN  TINYINT(1),
-            GUARDLEVEL  INT，
-            MEDAL  JSON
+    sql = """CREATE TABLE ROOMID (
+            RID INT(8),
+            UID INT,
+            NICKNAME CHAR(16),
+            TEXT CHAR(32),
+            TIMELINE DATETIME,
+            VIP TINYINT UNSIGNED,
+            SVIP TINYINT UNSIGNED,
+            ISADMIN TINYINT UNSIGNED,
+            GUARDLEVEL INT(2),
+            MEDALLEVEL INT(2),
+            MEDAL CHAR(8)
              )"""
- 
-    cursor.execute(sql)
+    try:
+         
+        # 执行SQL语句
+        cursor.execute(sql)
+        print("创建数据库成功")
+    except Exception as e:
+        print("创建数据库失败：case%s"%e)
+    finally:
+        
+        #关闭游标连接
+        cursor.close()
 
-    # 关闭数据库连接
-    db.close()
+        # 关闭数据库连接
+        db.close()
  
 def insert(value):
 
     # 打开数据库连接
-    db = pymysql.connect("localhost", "root", "root", "TESTDB")
+    db = pymysql.connect(host='localhost',port=3306,user='root',passwd='721017988',database='BiliBiliDanMu',charset='utf8')
 
     # 使用cursor()方法获取操作游标
     cursor = db.cursor()
 
     # SQL 插入语句
-    sql = """INSERT INTO ROOMID(Roomid  INT AUTO_INCREMENT PRIMARY KEY,UID ,NICKNAME,TEXT,
-                                TIMELINE,VIP,SVIP,
-                                ISADMIN,GUARDLEVEL,MEDAL)
-                                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s )"""
+    sql = "INSERT INTO ROOMID(RID,UID,NICKNAME,TEXT,TIMELINE,VIP,SVIP,ISADMIN,GUARDLEVEL,MEDALLEVEL,MEDAL)VALUES(%s, %s,' %s',' %s',' %s', %s, %s, %s, %s, %s,' %s')"%(value[0],value[1],value[2],value[3],value[4],value[5],value[6],value[7],value[8],value[9],value[10])
     try:
-        cursor.execute(sql,value)
+        cursor.execute(sql)
         db.commit()
         print('插入数据成功')
     except:
@@ -147,8 +156,7 @@ def insert(value):
 
 
 #实时请求数据
-    creat()
-    
+create()
 while True:
     time.sleep(2)
     response=requests.post(url=url,headers=headers,data=dat)
@@ -156,6 +164,8 @@ while True:
     # print(type(dic_data))
     content=[item for item in dic_data['data']['room']]
     for item in content:
-        medal = json.dumps(item['medal'])
-        value=[Roomid,item['uid'],item['nickname'],item['text'],item['timeline'],item['vip'],item['svip'],item['isadmin'],item['guard_level'],medal]
+        if len(item['medal']):#判断是否有牌子
+            value=[Roomid,item['uid'],item['nickname'],item['text'],item['timeline'],item['vip'],item['svip'],item['isadmin'],item['guard_level'],item['medal'][0],item['medal'][1]]
+        else:
+            value=[Roomid,item['uid'],item['nickname'],item['text'],item['timeline'],item['vip'],item['svip'],item['isadmin'],item['guard_level'],0,'medal']
         insert(value)
