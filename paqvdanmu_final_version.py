@@ -441,7 +441,7 @@ def keywords_time():
                       )  # 纵轴一弹幕数量
             # .add_yaxis('用户', uid_list)      # 纵轴二用户数量
             .set_global_opts(
-            title_opts=opts.TitleOpts(title='关键词-时间图', subtitle="折线图"),  # 图表名称
+            title_opts=opts.TitleOpts(title='高级弹幕-时间图', subtitle="折线图"),  # 图表名称
             xaxis_opts=opts.AxisOpts(name='时间'),  # 设置x轴名字属性
             tooltip_opts=opts.TooltipOpts(trigger='axis', axis_pointer_type='cross'),  #提示框组件配置
             toolbox_opts=opts.ToolboxOpts(is_show=True, orient='vertical', pos_left='right'), #工具栏组件配置
@@ -449,8 +449,8 @@ def keywords_time():
 
     )
 
-    line.render('关键词-时间图.html')  # 输出为html
-    webbrowser.open("关键词-时间图.html")   #调用默认浏览器打开
+    line.render('高级弹幕-时间图.html')  # 输出为html
+    webbrowser.open("高级弹幕-时间图.html")   #调用默认浏览器打开
     # 关闭数据库连接
     db.close()
 
